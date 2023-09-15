@@ -114,7 +114,7 @@ function AddFriend({ isAddClosed, setIsAddClosed, onAddFriend }) {
   const [friendName, setFriendName] = useState('')
   const [img, setImg] = useState('')
 
-  function handleAddSubmit(e) {
+  function handleAdd(e) {
     e.preventDefault()
 
     if (friendName === '' || img === '') return
@@ -128,7 +128,7 @@ function AddFriend({ isAddClosed, setIsAddClosed, onAddFriend }) {
   return (
     <>
       {isAddClosed || (
-        <form className='form-add-friend' onSubmit={handleAddSubmit}>
+        <form className='form-add-friend' onSubmit={handleAdd}>
           <label htmlFor="name">🧑‍🦰Friend name</label>
           <input type="text" id="name" value={friendName} onChange={(e) => setFriendName(e.target.value)} />
           <label hrmlFor="img">🖼️Image URL</label>
@@ -146,22 +146,24 @@ function AddFriend({ isAddClosed, setIsAddClosed, onAddFriend }) {
 }
 
 function SplitDetails({ isCalcClosed, selectedFriend, handleEditBalance }) {
-  const [billValue, setBillValue] = useState(0)
+  const [bill, setBill] = useState(0)
   const [ownExpense, setOwnExpense] = useState(0)
   const [payer, setPayer] = useState(0)
 
-  let friendExpense = billValue - ownExpense
+  let friendExpense = bill ? bill - ownExpense : 0
   let newBalance;
 
   function handleSplit(e) {
     e.preventDefault()
 
+    if (bill < ownExpense || bill < friendExpense) return alert('Bill value must be higher than both expenses. 🤦')
+    if (bill === 0) return alert('Please provide the bill value. 🤦')
     if (payer === 0) newBalance = friendExpense
     else newBalance = -ownExpense
 
     handleEditBalance(newBalance)
 
-    setBillValue(0)
+    setBill(0)
     setOwnExpense(0)
     setPayer(0)
   }
@@ -171,12 +173,20 @@ function SplitDetails({ isCalcClosed, selectedFriend, handleEditBalance }) {
       {isCalcClosed || (
         <form className='form-split-bill' onSubmit={handleSplit}>
           <h2>Split with {selectedFriend.name}</h2>
-          <label htmlFor="billValue" >💰 Bill Value</label>
-          <input type="text" id='billValue' value={billValue} onChange={(e) => setBillValue(Number(e.target.value))} />
-          <label htmlFor="ownExpense">💁 Your Expense</label>
-          <input type="number" id='ownExpense' value={ownExpense} onChange={e => setOwnExpense(Number(e.target.value))} />
-          <label htmlFor="friendExpense">🧎 {selectedFriend.name}'s Expense</label>
-          <input type="text" id='friendExpense' disabled value={friendExpense} />
+          <label>💰 Bill Value</label>
+          <input
+            type="text"
+            value={bill}
+            onChange={(e) => setBill(Number(e.target.value))}
+          />
+          <label >💁 Your Expense</label>
+          <input
+            type="number"
+            value={ownExpense}
+            onChange={e => setOwnExpense(Number(e.target.value))}
+          />
+          <label >🧎 {selectedFriend.name}'s Expense</label>
+          <input type="text" disabled value={friendExpense} />
           <label>💸 Who is paying the bill?</label>
           <select value={payer} onChange={(e) => setPayer(e.target.value)}>
             <option value={0}>You</option>
@@ -184,8 +194,7 @@ function SplitDetails({ isCalcClosed, selectedFriend, handleEditBalance }) {
           </select>
           <button className='button'>Add</button>
         </form>
-      )
-      }
+      )}
     </>
   )
 }
